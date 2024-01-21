@@ -5,7 +5,12 @@ from typing import Tuple
 import requests
 from bs4 import BeautifulSoup as bs
 
-from dh_utils.constant_dh import DCMNO_REGEX, ELEID_REGEX, RCPNO_REGEX
+RCPNO_REGEX: str = r'''node[0-9]\['rcpNo'\]\s*=\s*"[0-9]*"'''
+DCMNO_REGEX: str = r'''node[0-9]\['dcmNo'\]\s*=\s*"[0-9]*"'''
+ELEID_REGEX: str = r'''node[0-9]\['eleId'\]\s*=\s*"[0-9]*"'''
+
+OG_URL = "https://dart.fss.or.kr/dsaf001/main.do?rcpNo={rcpno}"  # 브라우저를 통해서 직접 DART를 접속했을시에 표시되는 url (original_url)
+SRC_URL = "https://dart.fss.or.kr/report/viewer.do?rcpNo={rcpno}&dcmNo={dcmNo}&eleId={id}&offset=800&length=4053&dtd=dart3.xsd"
 
 
 def find_rcpNo(text: str) -> int:
@@ -52,3 +57,28 @@ def check_count(cnt: int, start: float) -> Tuple[int, float]:
     else:
         cnt += 1
     return (cnt, start)
+
+
+def crawl(rcpno: str, cnt: int) -> Tuple[dict, int]:
+    res = {}
+    og = OG_URL.format(rcpno=rcpno)
+    start = time.time()
+    req = requests.get(og).text
+    cnt, start = check_count(cnt, start)
+    change = req.find("정 정 신 고")
+    dcmNo = find_dcmNo(req)
+    if change == -1:
+        id = [4, 10]
+    else:
+        id = [6, 12]
+    for i in id:
+        src = SRC_URL.format(rcpno=rcpno, dcmNo=dcmNo, id=i)
+        text = text_from_url(src)
+        cnt, start = check_count(cnt, start)
+        text = del_blank(text)
+        if i == id[0]:
+            res["회사의 개요"] = text
+        else:
+            res["사업의 개요"] = text
+
+    return (res, cnt)
