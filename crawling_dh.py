@@ -1,9 +1,8 @@
 import json
 
 import pandas as pd
+from src.utils_dh import crawl
 from tqdm import tqdm
-
-from dh_utils.utils_dh import crawl
 
 
 def main(
