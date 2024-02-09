@@ -12,12 +12,13 @@ data = pd.read_json(
 
 data["full"] = data["사업의 개요"] + data["회사의 개요"]
 
+API_KEY = ""
 
 chat = ChatOpenAI(
     temperature=0,  # 모델의 창의성? 같은 것 낮을수록 덜 창의적이고 높을수록 창의적이고 무작위성을 보임
     streaming=True,
     model="gpt-3.5-turbo-1106",
-    api_key="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",
+    api_key=API_KEY,
 )
 
 summarization = []
