@@ -12,7 +12,7 @@ data = pd.read_json(
 
 data["full"] = data["사업의 개요"] + data["회사의 개요"]
 
-API_KEY = ""
+API_KEY = "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"
 
 chat = ChatOpenAI(
     temperature=0,  # 모델의 창의성? 같은 것 낮을수록 덜 창의적이고 높을수록 창의적이고 무작위성을 보임
@@ -28,7 +28,7 @@ templates = ChatPromptTemplate.from_messages(
         ("system", "You are a corporate and business expert"),
         (
             "human",
-            "Given the following document, summarize the main businesses of this company. {text}",
+            "Summarize the company's main businesses in one line using English using the following text. {text}",
         ),
     ]
 )
@@ -38,17 +38,19 @@ reduce_templates = ChatPromptTemplate.from_messages(
         ("system", "You are a corporate and business expert"),
         (
             "human",
-            "Given the following str list, summarize the main businesses of this company. {str_list}",
+            "Summarize the company's main businesses in one line using English using the following list. {str_list}",
         ),
     ]
 )
 
 text_splitter = TokenTextSplitter(chunk_size=16385, chunk_overlap=0)
 
+index_ls = list(data.index)
 
-for i in tqdm(data.index):
+target = index_ls
+for i in tqdm(target):
     res: List[str] = []
-    texts = text_splitter.split_text(data["full"][i])
+    texts = text_splitter.split_text(data["사업의 개요"][i])
     if len(texts) != 1:
         for text in texts:
             prompt = templates.format_messages(text=text)
@@ -58,12 +60,12 @@ for i in tqdm(data.index):
         final_result = chat.predict_messages(reduce_prompt)
         summarization.append(final_result.content)
     else:
-        prompt = templates.format_messages(text=data["full"][i])
+        prompt = templates.format_messages(text=data["사업의 개요"][i])
         summarization.append(str(chat.predict_messages(prompt).content))
 data2 = pd.DataFrame()
-data2["stock_code"] = data.index
+data2["stock_code"] = target
 data2["summarization"] = summarization
 
 data2.to_csv(
-    "/Users/raphaelseo/Documents/projects/side_project/finance/Company_Clustering/summary.csv"
+    "/Users/raphaelseo/Documents/projects/side_project/finance/Company_Clustering/summary_business.csv"
 )
