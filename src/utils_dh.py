@@ -82,3 +82,28 @@ def crawl(rcpno: str, cnt: int) -> Tuple[dict, int]:
             res["사업의 개요"] = text
 
     return (res, cnt)
+
+
+def crawl_first_page(rcpno: str, cnt: int) -> Tuple[dict, int]:
+    res = {}
+    og = OG_URL.format(rcpno=rcpno)
+    start = time.time()
+    req = requests.get(og).text
+    cnt, start = check_count(cnt, start)
+    # change = req.find("정 정 신 고")
+    dcmNo = find_dcmNo(req)
+    # if change == -1:
+    #     id = [4, 10]
+    # else:
+    #     id = [6, 12]
+    # for i in id:
+    src = SRC_URL.format(rcpno=rcpno, dcmNo=dcmNo, id=1)
+    text = text_from_url(src)
+    cnt, start = check_count(cnt, start)
+    text = del_blank(text)
+    # if i == id[0]:
+    #     res["회사의 개요"] = text
+    # else:
+    #     res["사업의 개요"] = text
+    res["text"] = text
+    return (res, cnt)
